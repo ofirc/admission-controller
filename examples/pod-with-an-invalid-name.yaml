@@ -1,0 +1,16 @@
+# A pod with an invalid name that cannot be created.
+# Without the webhook, this Pod would be created successfully.
+# With this webhook in place, the creation of the Pod will be rejected
+# due to its name (the webhook hard codes this check).
+# See also pod-with-a-valid-name.yaml.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-an-invalid-name
+  labels:
+    app: pod-with-an-invalid-name
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "sleep 500"]

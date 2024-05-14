@@ -1,0 +1,14 @@
+# A standard Pod that doesn't get blocked by the webhook.
+# It is used to show that the webhook doesn't block all Pods creation.
+# See also pod-with-an-invalid-name.yaml.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-a-valid-name
+  labels:
+    app: pod-with-a-valid-name
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "sleep 500"]

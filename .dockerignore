@@ -1,0 +1,7 @@
+# Ignore everything
+**
+
+# Whitelist only what's necessary
+!go.mod
+!go.sum
+!cmd/webhook-server/webhook-server.go

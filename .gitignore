@@ -1,0 +1,37 @@
+# Binaries and other executable artifacts
+webhook
+*.exe
+*.exe~
+
+# Dependency directories (remove the directory itself, keep track of dependencies)
+/vendor/
+
+# Ignore typical Go directories
+bin/
+pkg/
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# OS generated files
+.DS_Store
+._*
+Thumbs.db
+
+# Ignore local configuration files
+*.env
+.env
+
+# Editor directories and files
+.idea/
+*.swp
+*.swo
+.vscode/
+
+# The x.509 CA and certificates that get auto-generated.
+certs/
+
+# Auto-generated deployment.yaml.
+deploy/kubernetes/deployment.yaml

@@ -1,0 +1,58 @@
+# Copyright (c) 2024 Ofir Cohen.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#    http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bin/webhook-server ./cmd/webhook-server
+    desc: "Build the Go webhook server executable."
+
+  package:
+    cmds:
+      - docker build --target distroless -t ofirc/admission-controller:latest .
+      - docker build --target development -t ofirc/admission-controller:dev .
+    desc: "Build the Docker image containing the Go webhook server."
+
+  push-image:
+    deps:
+    - package
+    cmds:
+      - docker push ofirc/admission-controller:latest
+      - docker push ofirc/admission-controller:dev
+    desc: "Pushes the Docker images to the container registry."
+
+  deploy:
+    cmds:
+      - ./deploy/gen-keys.sh
+      - kubectl apply -f ./deploy/kubernetes/deployment.yaml
+    desc: "Renders a Kubernetes manifest from the template and deploys (applies) it to the cluster."
+
+  gen-certs:
+    cmds:
+      - mkdir -p certs
+      # Generate the CA cert and private key
+      - openssl req -nodes -new -x509 -keyout certs/ca.key -out certs/ca.crt -subj "/CN=Admission Controller Webhook Demo CA"
+      # Generate the private key for the webhook server
+      - openssl genrsa -out certs/webhook.key 2048
+      # Generate a Certificate Signing Request (CSR) for the private key, and sign it with the private key of the CA.
+      - openssl req -new -key certs/webhook.key -subj "/CN=webhook-server.webhook-demo.svc" -config deploy/server.conf -out certs/webhook.csr
+      - openssl x509 -req -in certs/webhook.csr -CA certs/ca.crt -CAkey certs/ca.key -CAcreateserial -out certs/webhook.crt -extensions v3_req -extfile deploy/server.conf
+    desc: "Generates a self-signed x.509 CA and a TLS (leaf) certificate signed by this CA."
+
+  uninstall:
+    cmds:
+      - kubectl delete -f ./deploy/kubernetes/deployment.yaml
+    desc: "Removes all resources associated with the validating admission controller from the cluster."
